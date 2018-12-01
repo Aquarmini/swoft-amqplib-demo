@@ -11,9 +11,12 @@
 namespace App\Core\Amqp\Demo;
 
 use App\Core\Amqp\AmqpConnection;
+use Swoft\App;
 use Swoft\Redis\Redis;
 use Swoftx\Amqplib\Connection;
 use Swoftx\Amqplib\Message\Consumer;
+use Swoftx\Amqplib\Pool\RabbitMQPool;
+use Swoftx\Amqplib\SwoftConnection;
 
 class DemoConsumer extends Consumer
 {
@@ -33,6 +36,9 @@ class DemoConsumer extends Consumer
 
     protected function getConnection(): Connection
     {
-        return bean(AmqpConnection::class)->build();
+        $pool = App::getPool(RabbitMQPool::class);
+        /** @var SwoftConnection $conn */
+        $conn = $pool->getConnection();
+        return $conn->getConnection();
     }
 }
