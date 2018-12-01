@@ -11,14 +11,20 @@
 namespace App\Core\Amqp\Demo;
 
 use App\Core\Amqp\AmqpConnection;
+use Swoft\Pool\ConnectionInterface;
 use Swoftx\Amqplib\Connection;
 use Swoftx\Amqplib\Message\Publisher;
+use Swoftx\Amqplib\Pool\RabbitMQPool;
+use Swoftx\Amqplib\SwoftConnection;
 
 class DemoPublisher extends Publisher
 {
     protected $exchange = 'swoft-demo-exchange';
 
     protected $routingKey = 'swoft-demo-route';
+
+    /** @var SwoftConnection */
+    protected $swoftConnection;
 
     public function __construct()
     {
@@ -32,6 +38,14 @@ class DemoPublisher extends Publisher
 
     protected function getConnection(): Connection
     {
-        return bean(AmqpConnection::class)->build();
+        $pool = \Swoft\App::getPool(RabbitMQPool::class);
+        $this->swoftConnection = $pool->getConnection();
+        return $this->swoftConnection->getConnection();
+    }
+
+    public function publish()
+    {
+        parent::publish();
+        $this->swoftConnection->release(true);
     }
 }
